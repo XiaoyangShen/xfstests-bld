@@ -14,13 +14,16 @@ BACKPORTS="@BACKPORTS@"
 BTRFS_PROGS="@BTRFS_PROGS@"
 F2FS_TOOLS="@F2FS_TOOLS@"
 DUPEREMOVE="@DUPEREMOVE@"
+GO_VERSION=@GO_VERSION@
 
 PACKAGES="bash-completion \
 	bc \
+  bison \
 	blktrace \
 	bsdmainutils \
 	bsd-mailx \
 	"$BTRFS_PROGS" \
+  build-essential \
 	bzip2 \
 	cpio \
 	cryptsetup \
@@ -36,7 +39,9 @@ PACKAGES="bash-completion \
 	ed \
 	"$F2FS_TOOLS" \
 	file \
+  flex \
 	gawk \
+  git \
 	jfsutils \
 	jq \
 	kexec-tools \
@@ -44,10 +49,13 @@ PACKAGES="bash-completion \
 	less \
 	libcap2-bin \
 	"libcomerr2$BACKPORTS" \
+  libelf-dev \
 	libsasl2-modules \
 	"libss2$BACKPORTS" \
 	liblzo2-2 \
 	libkeyutils1 \
+  libncurses-dev \
+  libssl-dev \
 	lighttpd \
 	lvm2 \
 	mtd-utils \
@@ -258,6 +266,29 @@ echo "export RUN_ON_GCE=yes" >> /tmp/test-config
 mv /tmp/test-config /root/test-config
 rm -f /root/*~
 chown root:root /root
+
+# fetch source code for go
+ARCH="$(uname -m)"
+
+case $ARCH in
+"x86_64")
+    ARCH=amd64
+    ;;
+.*386.*)
+    ARCH=386
+    ;;
+esac
+
+GO_TEMP=$(mktemp -d)
+curl -o "$GO_TEMP/go.tar.gz" https://storage.googleapis.com/golang/go$GO_VERSION.linux-$ARCH.tar.gz
+
+if [ $? -ne 0 ]; then
+    echo "Go download failed! Exiting."
+    exit 1
+fi
+
+tar -C /usr/local/lib  -xzf $GO_TEMP/go.tar.gz
+rm -rf $GO_TEMP
 
 . /root/test-config
 
