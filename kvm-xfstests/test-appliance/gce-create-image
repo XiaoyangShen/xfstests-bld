@@ -133,6 +133,7 @@ sed -e "s/@BUCKET@/$GS_BUCKET/" \
     -e "s;@BTRFS_PROGS@;$BTRFS_PROGS;" \
     -e "s;@F2FS_TOOLS@;$F2FS_TOOLS;" \
     -e "s;@DUPEREMOVE@;$DUPEREMOVE;" \
+	-e "s;@GO_VERSION@;$GO_VERSION;" \
     < gce-xfstests-bld.sh > $td/gce-xfstests-bld.sh
 
 # Update the git-versions file
