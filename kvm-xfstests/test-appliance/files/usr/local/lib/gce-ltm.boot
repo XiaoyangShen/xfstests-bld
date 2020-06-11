@@ -54,7 +54,7 @@ then
     # Restart to allow conf changes to take effect.
 fi
 
-# create the go server here
+# launch the go server here
 
 if test ! -d "/var/log/go"
 then
