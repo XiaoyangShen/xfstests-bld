@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 const (
@@ -46,7 +47,33 @@ func runTests(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+func test() {
+	arg := os.Args[1]
+	branch := "master"
+	if len(os.Args) > 2 {
+		branch = os.Args[2]
+	}
+	switch arg {
+	case "clone":
+		gitClone("https://github.com/XiaoyangShen/spinner_test.git", "test")
+	case "commit":
+		id := gitCommit("test", branch)
+		fmt.Println(id)
+	case "pull":
+		id := gitPull("test", branch)
+		fmt.Println(id)
+	case "watch":
+		gitWatch("https://github.com/XiaoyangShen/spinner_test.git", "test", "master")
+	}
+}
+
+// func init() {
+// 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+// }
+
 func main() {
+	test()
+	return
 	http.HandleFunc("/", index)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/gce-xfstests", runTests)
