@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script conditionally boots the test appliance into the build server
+# This script conditionally boots the test appliance into the compile server
 
 . /usr/local/lib/gce-funcs
 
@@ -21,7 +21,7 @@ mkdir /repositories
 # mount /dev/sdb /repositories
 # chown www-data:www-data -R /repositories
 
-# login shells dont need test env on the build sever (shouldn't be running tests
+# login shells dont need test env on the compile sever (shouldn't be running tests
 # in the compile server vm)
 echo > ~/test-env
 

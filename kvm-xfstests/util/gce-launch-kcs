@@ -114,8 +114,8 @@ fi
 
 echo "GCE_KCS_SERVER_CERT=$DIR/.gce_xfstests_cert.pem" > $DIR/.kcs_instance
 echo "GCE_KCS_NAME=$INSTANCE" >> $DIR/.kcs_instance
-echo -n "GCE_KCS_INT_IP=" >> $DIR/.kcs_instance
-echo -n "Waiting for VM to boot to grab internal IP..."
+echo -n "GCE_KCS_EXT_IP=" >> $DIR/.kcs_instance
+echo -n "Waiting for VM to boot to grab external IP..."
 
 function wait_for_command() {
     local my_cmd=$1
@@ -134,10 +134,19 @@ wait_for_command "gcloud compute instances describe \
     --project $GCE_PROJECT --zone $GCE_ZONE $INSTANCE"
 echo " Done!"
 
-# always use internal ip since only LTM communicates with KCS
 gcloud compute instances describe "$INSTANCE" \
     --project "$GCE_PROJECT" --zone "$GCE_ZONE" \
-    --format="get(networkInterfaces[0].networkIP)" >> $DIR/.kcs_instance
+    --format="get(networkInterfaces[0].accessConfigs[0].natIP)" >> $DIR/.kcs_instance
+
+# use internal ip if this machine is in the same GCE project
+if test -n "$RUN_INTERNAL"; then
+    echo "Runs on same GCE project so grab internal IP"
+    echo -n "GCE_KCS_INT_IP=" >> $DIR/.kcs_instance
+
+    gcloud compute instances describe "$INSTANCE" \
+        --project "$GCE_PROJECT" --zone "$GCE_ZONE" \
+        --format="get(networkInterfaces[0].networkIP)" >> $DIR/.kcs_instance
+fi
 
 echo -n "Fetching password..."
 wait_for_command "gsutil -q stat gs://$GS_BUCKET/ltm-pass"

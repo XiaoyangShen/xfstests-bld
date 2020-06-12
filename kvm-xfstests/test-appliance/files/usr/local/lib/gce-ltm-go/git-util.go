@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -12,17 +14,30 @@ const (
 	checkInterval = 5
 )
 
-// clone a repository into specified directory
+type Repository struct {
+	url        string
+	id         string
+	branch     string
+	currCommit string
+	watching   bool
+}
+
+// clone a repository into a unique directory
 // remove directory if already exists
+// should be called only once
 // only public repos are supported
-func gitClone(url string, dirName string) {
+func (r *Repository) clone(url string, branch string) {
+	r.url = url
+	r.branch = branch
+	id, _ := uuid.NewRandom()
+	r.id = id.String()
 
 	errDir := os.MkdirAll(rootdir, 755)
 	if errDir != nil {
 		log.Fatal(errDir)
 	}
 
-	dir := rootdir + "/" + dirName
+	dir := rootdir + "/" + r.id
 	stat, err := os.Stat(dir)
 	if err == nil {
 		if stat.IsDir() {
@@ -31,21 +46,22 @@ func gitClone(url string, dirName string) {
 			os.Remove(dir)
 		}
 	}
-
 	cmd := exec.Command("git", "clone", url, dir)
 	checkRun(cmd, rootdir)
 
+	r.currCommit = r.getCommit()
+	r.watching = false
 }
 
 // get the newest commit id on a local branch
 // the specified branch must exist locally
-func gitCommit(dirName string, branch string) string {
-	dir := rootdir + "/" + dirName
+func (r *Repository) getCommit() string {
+	dir := rootdir + "/" + r.id
 	stat, err := os.Stat(dir)
 	if err != nil || !stat.IsDir() {
 		log.Fatalf("directory %s does not exist!", dir)
 	}
-	cmd := exec.Command("git", "checkout", branch)
+	cmd := exec.Command("git", "checkout", r.branch)
 	checkRun(cmd, dir)
 	cmd = exec.Command("git", "rev-parse", "@")
 	commit := checkOutput(cmd, dir)
@@ -53,34 +69,29 @@ func gitCommit(dirName string, branch string) string {
 }
 
 // pull the newest code from upstream
-// return the newest commit id
-func gitPull(dirName string, branch string) string {
-	dir := rootdir + "/" + dirName
+func (r *Repository) pull() {
+	dir := rootdir + "/" + r.id
 	stat, err := os.Stat(dir)
 	if err != nil || !stat.IsDir() {
 		log.Fatalf("directory %s does not exist!", dir)
 	}
-	cmd := exec.Command("git", "checkout", branch)
+	cmd := exec.Command("git", "pull")
 	checkRun(cmd, dir)
-	cmd = exec.Command("git", "pull")
-	checkRun(cmd, dir)
-	cmd = exec.Command("git", "rev-parse", "@")
-	commit := checkOutput(cmd, dir)
-	return commit[:len(commit)-1]
 }
 
 // watch a specified branch in a repo
 // print newest commit id when upstream changes
-func gitWatch(url string, dirName string, branch string) {
-	gitClone(url, dirName)
-	currCommit := gitCommit(dirName, branch)
-	newCommit := currCommit
+func (r *Repository) watch() {
+	if r.watching {
+		return
+	}
+	r.watching = true
 	for true {
 		time.Sleep(checkInterval * time.Second)
-		newCommit = gitPull(dirName, branch)
-		if newCommit != currCommit {
+		newCommit := r.getCommit()
+		if newCommit != r.currCommit {
 			log.Println("new commit detected")
-			currCommit = newCommit
+			r.currCommit = newCommit
 		}
 	}
 }
