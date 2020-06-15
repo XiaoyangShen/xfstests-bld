@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	"example.com/gce-server/util"
 )
 
 const (
@@ -15,8 +18,18 @@ const (
 	CertPath      = "/root/xfstests_bld/kvm-xfstests/.gce_xfstests_cert.pem"
 )
 
-type Opts struct {
-	no_region_shard string
+type Options struct {
+	NoRegionShard bool   `json:"no_region_shard"`
+	BucketSubdir  string `json:"bucket_subdir"`
+	GsKernel      string `json:"gs_kernel"`
+	ReportEmail   string `json:"report_email"`
+	CommitID      string `json:"commit_id"`
+	GitRepo       string `json:"git_repo"`
+}
+
+type TestRequest struct {
+	CmdLine string  `json:"orig_cmdline"`
+	Options Options `json:"options"`
 }
 
 type Respond struct {
@@ -26,7 +39,7 @@ type Respond struct {
 func index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("LTM test page"))
-	fmt.Println("Hello World")
+	log.Println("Hello World")
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -37,43 +50,46 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-	fmt.Println("log in here", string(js))
+	log.Println("log in here", string(js))
 }
 
 func runTests(w http.ResponseWriter, r *http.Request) {
+	var c TestRequest
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	data, _ := base64.StdEncoding.DecodeString(c.CmdLine)
+	log.Printf("receive test request: %+v\n%s", c.Options, string(data))
+
 	status := Respond{true}
 	js, _ := json.Marshal(status)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
+var repo util.Repository
+
 func test() {
-	arg := os.Args[1]
-	branch := "master"
-	if len(os.Args) > 2 {
-		branch = os.Args[2]
-	}
-	switch arg {
-	case "clone":
-		gitClone("https://github.com/XiaoyangShen/spinner_test.git", "test")
-	case "commit":
-		id := gitCommit("test", branch)
-		fmt.Println(id)
-	case "pull":
-		id := gitPull("test", branch)
-		fmt.Println(id)
-	case "watch":
-		gitWatch("https://github.com/XiaoyangShen/spinner_test.git", "test", "master")
+	reader := bufio.NewReader(os.Stdin)
+	for true {
+		arg, _ := reader.ReadString('\n')
+		switch arg[:len(arg)-1] {
+		case "clone":
+			repo = util.CloneBranch("https://github.com/XiaoyangShen/spinner_test.git", "master")
+		case "commit":
+			id := repo.GetCommit()
+			log.Println(id)
+		case "pull":
+			repo.Pull()
+		case "watch":
+			repo.Watch()
+		}
 	}
 }
 
-// func init() {
-// 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-// }
-
 func main() {
-	test()
-	return
 	http.HandleFunc("/", index)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/gce-xfstests", runTests)

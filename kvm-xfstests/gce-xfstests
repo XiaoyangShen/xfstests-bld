@@ -532,7 +532,7 @@ case "$1" in
 	RUN_ON_LTM="yes"
 	GCE_USER="ltm"
 	;;
-    build)
+    kcs)
 	shift
 	if [ ! -f "$DIR/.kcs_instance" ]; then
 		echo "The .kcs_instance file is not present! Please launch the compile server before"
@@ -542,6 +542,7 @@ case "$1" in
 	NO_ACTION=": "
 	RUN_ON_KCS="yes"
 	GCE_USER="kcs"
+
 	;;
 esac
 

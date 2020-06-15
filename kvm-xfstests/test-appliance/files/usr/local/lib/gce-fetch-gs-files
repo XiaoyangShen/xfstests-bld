@@ -29,10 +29,10 @@ if [ "$(hostname)" = "xfstests-kcs" ]
 then
     gsutil cat gs://$GS_BUCKET/gce-xfstests-cert.pem \
 	   > $DIR/.gce_xfstests_cert.pem
-    echo "GCE_LTM_SERVER_CERT=$DIR/.gce_xfstests_cert.pem" > $DIR/.kcs_instance
-    echo "GCE_LTM_NAME=$(hostname)" >> $DIR/.kcs_instance
-    echo "GCE_LTM_EXT_IP=127.0.0.1" >> $DIR/.kcs_instance
-    echo -n "GCE_LTM_PWD=" >> $DIR/.kcs_instance
+    echo "GCE_KCS_SERVER_CERT=$DIR/.gce_xfstests_cert.pem" > $DIR/.kcs_instance
+    echo "GCE_KCS_NAME=$(hostname)" >> $DIR/.kcs_instance
+    echo "GCE_KCS_EXT_IP=127.0.0.1" >> $DIR/.kcs_instance
+    echo -n "GCE_KCS_PWD=" >> $DIR/.kcs_instance
     gsutil cat gs://$GS_BUCKET/ltm-pass >> $DIR/.kcs_instance
 fi
 touch $DIR/config.common
