@@ -14,7 +14,7 @@ fi
 
 /usr/local/lib/gce-logger starting compile server
 
-mkdir /repositories
+mkdir /root/repositories
 # attach repository cache disk
 # chmod +x /usr/local/lib/gce-repo-cache
 # /usr/local/lib/gce-repo-cache
@@ -31,6 +31,9 @@ systemctl stop gce-finalize.timer
 systemctl disable gce-finalize.timer
 
 logger -i "Disabled gce-finalize timer"
+
+systemctl stop lighttpd
+systemctl disable lighttpd
 
 if test ! -d "/var/log/kcs"
 then

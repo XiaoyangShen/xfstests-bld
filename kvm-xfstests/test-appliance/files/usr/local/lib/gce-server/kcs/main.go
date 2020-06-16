@@ -31,7 +31,8 @@ type LTMRequest struct {
 }
 
 type LTMRespond struct {
-	Status bool `json:"status"`
+	Status bool   `json:"status"`
+	Msg    string `json:"message"`
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +42,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	stat := LTMRespond{true}
+	stat := LTMRespond{true, ""}
 	js, err := json.Marshal(stat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

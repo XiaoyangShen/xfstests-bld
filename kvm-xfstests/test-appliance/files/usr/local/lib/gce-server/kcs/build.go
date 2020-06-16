@@ -1,22 +1,24 @@
 package main
 
 import (
-	"log"
 	"os/exec"
 
 	"example.com/gce-server/util"
 )
 
-const (
-	buildScriptDir = "/usr/local/lib/gce-build-kernel"
-)
-
 func buildKernel(c LTMRequest) LTMRespond {
-	repo := util.CloneCommit(c.Options.GitRepo, c.Options.CommitID)
-	log.Printf("get build request: %+v\n", repo)
-
-	cmd := exec.Command("bash", "-x", buildScriptDir, repo.GetDir(), util.GetConfig()["GS_BUCKET"])
-	util.CheckRun(cmd, repo.GetDir())
-	respond := LTMRespond{true}
+	go runBuild(c.Options.GitRepo, c.Options.CommitID)
+	respond := LTMRespond{true, "started"}
 	return respond
+}
+
+func runBuild(url string, commit string) {
+	cmd := exec.Command(util.FetchBuildScript)
+	env := map[string]string{
+		"GIT_REPO":     url,
+		"COMMIT":       commit,
+		"GS_BUCKET":    util.GetConfig()["GS_BUCKET"],
+		"BUILD_KERNEL": "yes",
+	}
+	util.CheckRun(cmd, util.Rootdir, env)
 }

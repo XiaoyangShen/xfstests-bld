@@ -77,7 +77,7 @@ func test() {
 		arg, _ := reader.ReadString('\n')
 		switch arg[:len(arg)-1] {
 		case "clone":
-			repo = util.CloneBranch("https://github.com/XiaoyangShen/spinner_test.git", "master")
+			repo = util.Clone("https://github.com/XiaoyangShen/spinner_test.git", "master")
 		case "commit":
 			id := repo.GetCommit()
 			log.Println(id)
