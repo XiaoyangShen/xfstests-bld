@@ -14,7 +14,8 @@ BACKPORTS="@BACKPORTS@"
 BTRFS_PROGS="@BTRFS_PROGS@"
 F2FS_TOOLS="@F2FS_TOOLS@"
 DUPEREMOVE="@DUPEREMOVE@"
-GO_VERSION=@GO_VERSION@
+# Hardcoded go version
+GO_VERSION=1.14.4
 
 PACKAGES="bash-completion \
 	bc \
@@ -246,7 +247,6 @@ done
 rm -rf /var/www/html /var/www/cgi-bin
 ln -s /usr/lib/cgi-bin /var/www/cgi-bin
 chown www-data:www-data -R /usr/local/lib/gce-ltm
-chown www-data:www-data -R /usr/local/lib/gce-kcs
 chown www-data:www-data -R /var/www
 mkdir /root/builds
 chown www-data:www-data -R /root/builds
@@ -271,19 +271,8 @@ rm -f /root/*~
 chown root:root /root
 
 # fetch source code for go
-ARCH="$(uname -m)"
-
-case $ARCH in
-"x86_64")
-    ARCH=amd64
-    ;;
-.*386.*)
-    ARCH=386
-    ;;
-esac
-
 GO_TEMP=$(mktemp -d)
-curl -o "$GO_TEMP/go.tar.gz" https://storage.googleapis.com/golang/go$GO_VERSION.linux-$ARCH.tar.gz
+curl -o "$GO_TEMP/go.tar.gz" https://storage.googleapis.com/golang/go$GO_VERSION.linux-amd64.tar.gz
 
 if [ $? -ne 0 ]; then
     echo "Go download failed! Exiting."

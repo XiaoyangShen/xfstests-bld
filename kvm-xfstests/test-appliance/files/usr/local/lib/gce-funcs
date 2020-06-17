@@ -129,7 +129,7 @@ fi
 
 function run_hooks() {
     local hook=$1
-    shift 
+    shift
 
     local HOOK_ARG="$*"
     export HOOK_ARG

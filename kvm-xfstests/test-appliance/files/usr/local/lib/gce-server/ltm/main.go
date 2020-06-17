@@ -27,12 +27,12 @@ type Options struct {
 	GitRepo       string `json:"git_repo"`
 }
 
-type TestRequest struct {
+type LTMRequest struct {
 	CmdLine string  `json:"orig_cmdline"`
 	Options Options `json:"options"`
 }
 
-type Respond struct {
+type LTMRespond struct {
 	Status bool `json:"status"`
 }
 
@@ -43,7 +43,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	stat := Respond{true}
+	stat := LTMRespond{true}
 	js, err := json.Marshal(stat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,7 +54,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func runTests(w http.ResponseWriter, r *http.Request) {
-	var c TestRequest
+	var c LTMRequest
 	err := json.NewDecoder(r.Body).Decode(&c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -63,7 +63,7 @@ func runTests(w http.ResponseWriter, r *http.Request) {
 	data, _ := base64.StdEncoding.DecodeString(c.CmdLine)
 	log.Printf("receive test request: %+v\n%s", c.Options, string(data))
 
-	status := Respond{true}
+	status := LTMRespond{true}
 	js, _ := json.Marshal(status)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)

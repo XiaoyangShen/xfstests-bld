@@ -34,6 +34,3 @@ IMAGE_FLAG="--image-family"
 # space saved isn't worth the additional VM time to run certain
 # high-IOPS tests.
 GCE_MIN_SCR_SIZE=100
-
-# Hardcoded version of Go running on LTM
-GO_VERSION="1.14.4"
