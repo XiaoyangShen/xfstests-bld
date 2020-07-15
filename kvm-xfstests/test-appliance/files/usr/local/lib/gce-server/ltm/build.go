@@ -19,9 +19,9 @@ import (
 // Timeout defines the time out threshold for a kernel build
 const Timeout = 1800
 
-// StartBuild inits a build task by calling KCS to build a kernel image.
+// ForwardKCS forwards a build or git bisect task to KCS.
 // Sends failure report email to user on failures
-func StartBuild(req server.TaskRequest, testID string) {
+func ForwardKCS(req server.TaskRequest, testID string) {
 	logDir := logging.LTMLogDir + testID + "/"
 	err := util.CreateDir(logDir)
 	if err != nil {
@@ -31,7 +31,7 @@ func StartBuild(req server.TaskRequest, testID string) {
 	log := logging.InitLogger(logFile)
 	defer logging.CloseLog(log)
 
-	subject := "xfstests LTM build request failure " + testID
+	subject := "xfstests LTM forwarding request failure " + testID
 	defer util.ReportFailure(log, logFile, req.Options.ReportEmail, subject)
 
 	args := server.InternalOptions{

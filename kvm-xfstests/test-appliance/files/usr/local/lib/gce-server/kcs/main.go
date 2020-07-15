@@ -42,22 +42,28 @@ func runCompile(w http.ResponseWriter, r *http.Request) {
 	}).Info("Received compile request")
 
 	testID := util.GetTimeStamp()
+	response := server.SimpleResponse{
+		Status: true,
+		TestID: testID,
+	}
+
 	if c.ExtraOptions == nil {
 		log.WithField("testID", testID).Info("User request, generating testID")
 	} else if logging.MOCK {
 		testID = c.ExtraOptions.TestID
-		log.WithField("testID", testID).Info("Mock build")
+		log.WithField("testID", testID).Info("LTM request, mock build")
 		go MockStartBuild(c, testID)
 	} else if c.ExtraOptions.Requester == "ltm" {
 		testID = c.ExtraOptions.TestID
 		log.WithField("testID", testID).Info("LTM request, use existing testID")
-		go StartBuild(c, testID)
-	}
 
-	response := server.SimpleResponse{
-		Status: true,
-		TestID: testID,
-		Msg:    "Building kernel",
+		if c.Options.BadCommit != "" && c.Options.GoodCommit != "" {
+			go StartBisect(c, testID)
+			response.Msg = "Initiating git bisect"
+		} else {
+			go StartBuild(c, testID)
+			response.Msg = "Building kernel"
+		}
 	}
 
 	log.WithField("response", response).Info("Kernel builder started")
