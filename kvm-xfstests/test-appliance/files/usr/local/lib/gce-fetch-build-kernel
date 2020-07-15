@@ -1,14 +1,15 @@
 #!/bin/bash
 set -e -x
-# This script is used by the kernel compile server
+# This script is used by KCS server to build and upload kernels.
+# If repository REPO_ID exists, it pulls and checkouts to COMMIT.
 # Environment variables can be set:
-# GIT_REPO REPO_ID COMMIT GS_BUCKET BUILD_KERNEL
+# GIT_REPO REPO_ID COMMIT GS_BUCKET GS_PATH BUILD_KERNEL
 
 DIR=/root/repositories
 REF_DIR="$DIR/linux.reference"
 
 if test -z "$GIT_REPO"; then
-    echo -e "GIT_REPO is not set"
+    echo "GIT_REPO is not set"
     exit 1
 fi
 
@@ -21,7 +22,7 @@ if test -z "$COMMIT"; then
 fi
 
 if test -z "$GS_BUCKET" -a -n "$BUILD_KERNEL"; then
-    echo -e "GS_BUCKET is not set"
+    echo "GS_BUCKET is not set"
     exit 1
 fi
 
@@ -36,15 +37,17 @@ if [ ! -d "$REF_DIR" ]; then
 fi
 
 REPO_DIR="$DIR/$REPO_ID"
-if test -d "$REPO_DIR"; then
-    rm -rf "$REPO_DIR"
+if [ ! -d "$REPO_DIR" ]; then
+    cd $DIR
+    git clone --reference $REF_DIR $GIT_REPO $REPO_DIR
 fi
 
-cd $DIR
-git clone --reference $REF_DIR $GIT_REPO $REPO_DIR
-gsutil cp "gs://$GS_BUCKET/build_config" "$REPO_DIR/.config"
 cd $REPO_DIR
+git checkout master
+git pull
 git checkout $COMMIT
+
+gsutil cp "gs://$GS_BUCKET/build_config" "$REPO_DIR/.config"
 
 if test -n "$BUILD_KERNEL"; then
     make olddefconfig
